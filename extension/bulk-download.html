@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>StreamCatch Download All</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="download">
+    <header class="header">
+      <div>
+        <h1>Download all</h1>
+        <p id="countSubtitle" class="subtitle">Queue every captured link through ffmpeg</p>
+      </div>
+    </header>
+
+    <form id="bulkForm" class="form">
+      <label class="field">
+        <span>Save folder</span>
+        <input
+          id="downloadDir"
+          type="text"
+          placeholder="Downloads/StreamCatch"
+          autocomplete="off"
+          required
+        />
+        <small>Defaults to Downloads/StreamCatch in your home folder.</small>
+      </label>
+
+      <label class="field">
+        <span>Filename template</span>
+        <input
+          id="nameTemplate"
+          type="text"
+          value="{###}-720"
+          autocomplete="off"
+          required
+        />
+        <small>
+          Tokens: <code>{n}</code> number,
+          <code>{n:3}</code> / <code>{###}</code> / <code>###</code> padded number,
+          <code>{a}</code> / <code>{A}</code> letters.
+          Examples:
+          <code>{###}-720</code> → 001-720,
+          <code>{a}-720</code> → a-720,
+          <code>test-{n:2}-720</code> → test-01-720
+        </small>
+        <small id="previewHint" class="preview-hint"></small>
+      </label>
+
+      <label class="field">
+        <span>Quick templates</span>
+        <select id="templatePresets">
+          <option value="">Choose an example…</option>
+          <option value="{###}-720">001-720, 002-720, …</option>
+          <option value="{a}-720">a-720, b-720, …</option>
+          <option value="{A}-720">A-720, B-720, …</option>
+          <option value="test-{n:2}-720">test-01-720, test-02-720, …</option>
+          <option value="video_{n:3}">video_001, video_002, …</option>
+          <option value="{n}">1, 2, 3, …</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Start at</span>
+        <input
+          id="startAt"
+          type="text"
+          value="1"
+          autocomplete="off"
+          required
+        />
+        <small>Use a number (<code>1</code>) or a letter (<code>a</code> / <code>C</code>).</small>
+      </label>
+
+      <label class="field">
+        <span>If a file already exists</span>
+        <select id="conflictMode">
+          <option value="rename">Auto-rename (add _2, _3, …)</option>
+          <option value="skip">Skip</option>
+          <option value="overwrite">Overwrite</option>
+        </select>
+      </label>
+
+      <p id="status" class="status" role="status"></p>
+      <ol id="progressList" class="progress-list"></ol>
+
+      <div class="form-actions">
+        <button id="cancelBtn" class="btn btn-ghost" type="button">Cancel</button>
+        <button id="submitBtn" class="btn" type="submit">Download all</button>
+      </div>
+    </form>
+
+    <script src="bulk-download.js"></script>
+  </body>
+</html>

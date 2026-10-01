@@ -1,0 +1,43 @@
+{
+  "manifest_version": 2,
+  "name": "StreamCatch",
+  "version": "0.1.1",
+  "description": "Detect Cloudflare Stream / HLS links and download them with ffmpeg via a local helper.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "streamcatch@local",
+      "strict_min_version": "115.0"
+    }
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "webRequest",
+    "menus",
+    "notifications",
+    "nativeMessaging",
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_action": {
+    "default_title": "StreamCatch",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "icons/icon-48.png"
+    }
+  },
+  "icons": {
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png"
+  }
+}

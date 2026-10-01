@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>StreamCatch Download</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="download">
+    <header class="header">
+      <div>
+        <h1>Download</h1>
+        <p class="subtitle">Choose a folder and filename, then StreamCatch will call ffmpeg</p>
+      </div>
+    </header>
+
+    <form id="downloadForm" class="form">
+      <label class="field">
+        <span>Source URL</span>
+        <textarea id="sourceUrl" rows="3" readonly></textarea>
+      </label>
+
+      <label class="field">
+        <span>Save folder</span>
+        <input
+          id="downloadDir"
+          type="text"
+          placeholder="Downloads/StreamCatch"
+          autocomplete="off"
+          required
+        />
+        <small>Defaults to Downloads/StreamCatch in your home folder. Last choice is remembered.</small>
+      </label>
+
+      <label class="field">
+        <span>Output filename</span>
+        <input
+          id="filename"
+          type="text"
+          placeholder="my_video"
+          autocomplete="off"
+          required
+        />
+        <small>.mp4 is added automatically if missing</small>
+      </label>
+
+      <p id="status" class="status" role="status"></p>
+
+      <div class="form-actions">
+        <button id="cancelBtn" class="btn btn-ghost" type="button">Cancel</button>
+        <button id="submitBtn" class="btn" type="submit">Download</button>
+      </div>
+    </form>
+
+    <script src="download.js"></script>
+  </body>
+</html>

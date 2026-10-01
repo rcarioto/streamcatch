@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>StreamCatch</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="popup">
+    <header class="header">
+      <div>
+        <h1>StreamCatch</h1>
+        <p class="subtitle">Captured stream links</p>
+      </div>
+      <div class="header-actions">
+        <button id="downloadAllBtn" class="btn" type="button">Download all…</button>
+        <button id="debugBtn" class="btn btn-ghost" type="button">Copy debug</button>
+        <button id="clearBtn" class="btn btn-ghost" type="button">Clear</button>
+      </div>
+    </header>
+
+    <main>
+      <ul id="linkList" class="link-list"></ul>
+      <p id="emptyState" class="empty hidden">
+        No links yet. Browse a page with Cloudflare Stream or HLS media and they
+        will show up here.
+      </p>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

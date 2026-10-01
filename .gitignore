@@ -1,0 +1,35 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Native host generated launchers / machine-local manifests
+native-host/streamcatch_host
+native-host/streamcatch_host.bat
+native-host/com.streamcatch.host.json
+
+# Media / local downloads
+*.mp4
+*.ts
+*.m4s
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Local debug captures (may contain private course content)
+vid_label.png
+*.png
+!extension/icons/*.png
