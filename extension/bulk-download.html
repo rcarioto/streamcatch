@@ -27,51 +27,62 @@
         <small>Defaults to Downloads/StreamCatch in your home folder.</small>
       </label>
 
-      <label class="field">
-        <span>Filename template</span>
-        <input
-          id="nameTemplate"
-          type="text"
-          value="{###}-720"
-          autocomplete="off"
-          required
-        />
-        <small>
-          Tokens: <code>{n}</code> number,
-          <code>{n:3}</code> / <code>{###}</code> / <code>###</code> padded number,
-          <code>{a}</code> / <code>{A}</code> letters.
-          Examples:
-          <code>{###}-720</code> → 001-720,
-          <code>{a}-720</code> → a-720,
-          <code>test-{n:2}-720</code> → test-01-720
-        </small>
-        <small id="previewHint" class="preview-hint"></small>
+      <label class="check-row" id="useTitleRow">
+        <input id="useTitle" type="checkbox" />
+        <span class="check-copy">
+          <span class="check-label">Use video titles as filenames</span>
+          <small id="titleExample" class="title-example">Example: —</small>
+        </span>
       </label>
 
-      <label class="field">
-        <span>Quick templates</span>
-        <select id="templatePresets">
-          <option value="">Choose an example…</option>
-          <option value="{###}-720">001-720, 002-720, …</option>
-          <option value="{a}-720">a-720, b-720, …</option>
-          <option value="{A}-720">A-720, B-720, …</option>
-          <option value="test-{n:2}-720">test-01-720, test-02-720, …</option>
-          <option value="video_{n:3}">video_001, video_002, …</option>
-          <option value="{n}">1, 2, 3, …</option>
-        </select>
-      </label>
+      <div id="templateFields">
+        <label class="field">
+          <span>Filename template</span>
+          <input
+            id="nameTemplate"
+            type="text"
+            value="video_{n:3}"
+            autocomplete="off"
+            required
+          />
+          <small>
+            Tokens: <code>{n}</code> number,
+            <code>{n:3}</code> / <code>{###}</code> / <code>###</code> padded number,
+            <code>{a}</code> / <code>{A}</code> letters.
+            Examples:
+            <code>{###}</code> → 001,
+            <code>video_{n:3}</code> → video_001,
+            <code>{a}_clip</code> → a_clip,
+            <code>test-{n:2}</code> → test-01
+          </small>
+          <small id="previewHint" class="preview-hint"></small>
+        </label>
 
-      <label class="field">
-        <span>Start at</span>
-        <input
-          id="startAt"
-          type="text"
-          value="1"
-          autocomplete="off"
-          required
-        />
-        <small>Use a number (<code>1</code>) or a letter (<code>a</code> / <code>C</code>).</small>
-      </label>
+        <label class="field">
+          <span>Quick templates</span>
+          <select id="templatePresets">
+            <option value="">Choose an example…</option>
+            <option value="{###}">001, 002, …</option>
+            <option value="video_{n:3}">video_001, video_002, …</option>
+            <option value="{a}_clip">a_clip, b_clip, …</option>
+            <option value="{A}_clip">A_clip, B_clip, …</option>
+            <option value="test-{n:2}">test-01, test-02, …</option>
+            <option value="{n}">1, 2, 3, …</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Start at</span>
+          <input
+            id="startAt"
+            type="text"
+            value="1"
+            autocomplete="off"
+            required
+          />
+          <small>Use a number (<code>1</code>) or a letter (<code>a</code> / <code>C</code>).</small>
+        </label>
+      </div>
 
       <label class="field">
         <span>If a file already exists</span>

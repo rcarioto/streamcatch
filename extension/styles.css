@@ -199,6 +199,46 @@ h1 {
   font-weight: 600;
 }
 
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.check-row input[type="checkbox"] {
+  width: auto;
+  margin-top: 3px;
+  flex: 0 0 auto;
+}
+
+.check-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.check-label {
+  font-weight: 600;
+}
+
+.title-example {
+  color: var(--accent);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+#templateFields {
+  display: grid;
+  gap: 14px;
+}
+
+#templateFields.is-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
 input,
 textarea {
   width: 100%;

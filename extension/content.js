@@ -76,8 +76,6 @@ function isGenericSiteLabel(text) {
     return true;
   }
   if (
-    cleaned === "sans ondemand" ||
-    cleaned === "ondemand" ||
     cleaned === "video" ||
     cleaned === "stream" ||
     cleaned === "play" ||
@@ -89,8 +87,8 @@ function isGenericSiteLabel(text) {
 }
 
 /**
- * Title for whatever lesson/clip is currently selected in the page UI.
- * On SANS OnDemand the Cloudflare iframe title tracks the active lesson,
+ * Title for whatever video is currently selected in the page UI.
+ * Some players update the Cloudflare iframe title to the active video
  * even when iframe.src still points at a previously loaded video id.
  */
 function getActiveTitle() {
@@ -110,7 +108,7 @@ function getActiveTitle() {
     }
   }
 
-  const tocSelectors = [
+  const activeSelectors = [
     '[aria-current="page"]',
     '[aria-current="true"]',
     '[aria-selected="true"]',
@@ -121,7 +119,7 @@ function getActiveTitle() {
     ".current",
   ];
 
-  for (const selector of tocSelectors) {
+  for (const selector of activeSelectors) {
     const nodes = document.querySelectorAll(selector);
     for (const node of nodes) {
       const labeledChild = node.querySelector
@@ -135,7 +133,7 @@ function getActiveTitle() {
       if (title && !isGenericSiteLabel(title)) {
         return {
           label: title,
-          source: `active-toc:${selector}`,
+          source: `active-selection:${selector}`,
           confidence: 85,
         };
       }

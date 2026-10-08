@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/bin/python3.10 "/home/user1/cloudfare-stream-downloader/native-host/streamcatch_host.py" "$@"

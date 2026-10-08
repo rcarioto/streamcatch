@@ -1,5 +1,8 @@
 const form = document.getElementById("bulkForm");
 const downloadDirEl = document.getElementById("downloadDir");
+const useTitleEl = document.getElementById("useTitle");
+const titleExampleEl = document.getElementById("titleExample");
+const templateFieldsEl = document.getElementById("templateFields");
 const nameTemplateEl = document.getElementById("nameTemplate");
 const templatePresetsEl = document.getElementById("templatePresets");
 const startAtEl = document.getElementById("startAt");
@@ -14,6 +17,7 @@ const cancelBtn = document.getElementById("cancelBtn");
 const FALLBACK_DIR = "Downloads/StreamCatch";
 const TEMPLATE_KEY = "bulkNameTemplate";
 const START_KEY = "bulkStartAt";
+const USE_TITLE_KEY = "bulkUseTitle";
 
 let links = [];
 let cancelled = false;
@@ -69,6 +73,18 @@ function sanitizeFilenamePart(text) {
   return cleaned;
 }
 
+function sanitizeTitleFilename(title) {
+  let cleaned = String(title || "")
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[. ]+$/g, "");
+
+  cleaned = cleaned.replace(/\s*:\s*/g, " - ");
+  cleaned = cleaned.replace(/\s+/g, " ").trim();
+  return cleaned;
+}
+
 /**
  * Template tokens:
  *   {n}      -> 1, 2, 3
@@ -105,8 +121,48 @@ function buildFilename(template, startIndex, offset) {
   return applyTemplate(template, startIndex + offset);
 }
 
+function filenameFromTitle(item, fallbackTemplate, startIndex, offset) {
+  const stem = sanitizeTitleFilename(item && item.label);
+  if (stem) {
+    return `${stem}.mp4`;
+  }
+  return buildFilename(fallbackTemplate, startIndex, offset);
+}
+
+function updateTitleExample() {
+  const titled = links
+    .map((item) => sanitizeTitleFilename(item.label))
+    .filter(Boolean);
+
+  if (!titled.length) {
+    useTitleEl.disabled = true;
+    if (useTitleEl.checked) {
+      useTitleEl.checked = false;
+    }
+    titleExampleEl.textContent = "Example: (no titles available; use a template)";
+    applyTitleMode();
+    return;
+  }
+
+  useTitleEl.disabled = false;
+  const samples = titled.slice(0, 2).map((name) => `${name}.mp4`);
+  const more = titled.length > 2 ? ", …" : "";
+  titleExampleEl.textContent = `Example: ${samples.join(", ")}${more}`;
+  applyTitleMode();
+}
+
+function applyTitleMode() {
+  const usingTitles = useTitleEl.checked && !useTitleEl.disabled;
+  templateFieldsEl.classList.toggle("is-disabled", usingTitles);
+  nameTemplateEl.disabled = usingTitles;
+  templatePresetsEl.disabled = usingTitles;
+  startAtEl.disabled = usingTitles;
+  nameTemplateEl.required = !usingTitles;
+  startAtEl.required = !usingTitles;
+}
+
 function updatePreview() {
-  const template = nameTemplateEl.value.trim() || "{###}-720";
+  const template = nameTemplateEl.value.trim() || "video_{n:3}";
   const start = parseStartAt(startAtEl.value).index;
   const first = buildFilename(template, start, 0);
   const second = buildFilename(template, start, 1);
@@ -182,34 +238,47 @@ async function loadDownloadDir() {
 }
 
 async function loadTemplatePrefs() {
-  const data = await browser.storage.local.get([TEMPLATE_KEY, START_KEY]);
+  const data = await browser.storage.local.get([
+    TEMPLATE_KEY,
+    START_KEY,
+    USE_TITLE_KEY,
+  ]);
   if (data[TEMPLATE_KEY]) {
     nameTemplateEl.value = data[TEMPLATE_KEY];
   }
   if (data[START_KEY]) {
     startAtEl.value = data[START_KEY];
   }
+  if (data[USE_TITLE_KEY]) {
+    useTitleEl.checked = true;
+  }
   updatePreview();
+  applyTitleMode();
 }
 
-async function saveTemplatePrefs(template, startAt) {
+async function saveTemplatePrefs(template, startAt, useTitle) {
   await browser.storage.local.set({
     [TEMPLATE_KEY]: template,
     [START_KEY]: startAt,
+    [USE_TITLE_KEY]: Boolean(useTitle),
   });
 }
 
 async function loadLinks() {
   const result = await browser.runtime.sendMessage({ type: "getLinks" });
-  links = (result && result.links) || [];
+  // Oldest first so the start number/letter applies to the earliest capture.
+  links = ((result && result.links) || [])
+    .slice()
+    .sort((a, b) => (a.capturedAt || 0) - (b.capturedAt || 0));
   countSubtitleEl.textContent =
     links.length === 1
       ? "1 captured link ready to download"
-      : `${links.length} captured links ready to download`;
+      : `${links.length} captured links ready to download (oldest → newest)`;
   if (!links.length) {
     setStatus("No links in the list.", true);
     submitBtn.disabled = true;
   }
+  updateTitleExample();
 }
 
 form.addEventListener("submit", async (event) => {
@@ -220,12 +289,13 @@ form.addEventListener("submit", async (event) => {
   }
 
   const downloadDir = (downloadDirEl.value || "").trim() || FALLBACK_DIR;
-  const template = nameTemplateEl.value.trim() || "{###}-720";
+  const useTitles = useTitleEl.checked && !useTitleEl.disabled;
+  const template = nameTemplateEl.value.trim() || "video_{n:3}";
   const startIndex = parseStartAt(startAtEl.value).index;
   const conflictMode = conflictModeEl.value;
   nameTemplateEl.value = template;
 
-  await saveTemplatePrefs(template, startAtEl.value.trim() || "1");
+  await saveTemplatePrefs(template, startAtEl.value.trim() || "1", useTitles);
 
   cancelled = false;
   submitBtn.disabled = true;
@@ -260,7 +330,9 @@ form.addEventListener("submit", async (event) => {
       }
 
       const item = links[i];
-      let filename = buildFilename(template, startIndex, i);
+      let filename = useTitles
+        ? filenameFromTitle(item, template, startIndex, i)
+        : buildFilename(template, startIndex, i);
       const label = addProgressItem(`[${i + 1}/${links.length}] ${filename}…`);
 
       try {
@@ -335,6 +407,10 @@ cancelBtn.addEventListener("click", () => {
   window.close();
 });
 
+useTitleEl.addEventListener("change", () => {
+  applyTitleMode();
+});
+
 templatePresetsEl.addEventListener("change", () => {
   if (!templatePresetsEl.value) {
     return;
@@ -354,5 +430,9 @@ startAtEl.addEventListener("input", updatePreview);
 updatePreview();
 
 Promise.all([loadDownloadDir(), loadTemplatePrefs(), loadLinks()]).then(() => {
-  nameTemplateEl.focus();
+  if (useTitleEl.checked) {
+    useTitleEl.focus();
+  } else {
+    nameTemplateEl.focus();
+  }
 });

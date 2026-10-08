@@ -3,160 +3,89 @@
 Firefox extension + local helper that detects Cloudflare Stream / HLS links while you browse, lists them, and downloads them with `ffmpeg`.
 
 **Author:** Ray Carioto ([@rcarioto](https://github.com/rcarioto))  
-**License:** [GNU General Public License v3.0](LICENSE)
-
----
+**License:** [GNU GPL v3.0](LICENSE)
 
 ## Features
 
-- Captures Cloudflare Stream `manifest/video.m3u8` and related HLS URLs from page network traffic
-- Collapses thumbnail + manifest pairs for the same video
-- Shows lesson/clip titles when the page exposes an active title (for example SANS OnDemand)
+- Captures Cloudflare Stream / HLS URLs from page network traffic
 - Popup list with download, open, copy, and remove actions
-- Right-click menu integration
-- Single-file download with folder + filename prompts and overwrite protection
-- **Download all** with filename templates such as `{###}-720`, `{a}-720`, `test-{n:2}-720`
-- Cross-platform native messaging host for Linux, macOS, and Windows
-- Optional CLI (`main.py`) for pasting a URL directly
+- Single-file and bulk download via a local `ffmpeg` helper
+- Filename templates for bulk downloads (for example `video_{n:3}`)
+- Optional CLI: `StreamCatch.py`
 
 ## Requirements
 
-- **Firefox** 115+ (non-Snap builds are more reliable for native messaging on Linux)
-- **Python** 3.10+
-- **ffmpeg** on your `PATH`
-- Permission to install a native messaging host for Firefox
+- Firefox 115+
+- Python 3.10+
+- `ffmpeg` on your `PATH`
 
-## Repository layout
-
-```text
-extension/          Firefox add-on (load this folder)
-native-host/        Python native messaging host + installers
-main.py             Standalone CLI downloader
-LICENSE             GPL-3.0
-```
+On Linux, Mozilla’s non-Snap Firefox build is more reliable for native messaging.
 
 ## Install
 
-### 1. Install the native host
+### 1. Native host
 
-From the `native-host` directory:
-
-**Linux / macOS**
+From `native-host/`:
 
 ```bash
+# Linux / macOS
 ./install.sh
-# or
-python3 install_host.py
 ```
 
-**Windows**
-
 ```bat
+REM Windows
 install.bat
 ```
 
-or:
+Fully quit and restart Firefox afterward.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File install.ps1
-```
+### 2. Extension
 
-This registers the host name `com.streamcatch.host` for the extension id `streamcatch@local`.
+Firefox Release only permanently installs **signed** add-ons.
 
-Fully quit and restart Firefox after installing the host.
+**Permanent (recommended):** sign with [web-ext](https://extensionworkshop.com/documentation/develop/web-ext-command-reference/#web-ext-sign) / AMO, then install the `.xpi` from `about:addons` → **Install Add-on From File…**.
 
-### 2. Load the extension
+**Temporary (testing):** `about:debugging` → **Load Temporary Add-on…** → select `extension/manifest.json`. Reload after each Firefox restart.
 
-1. Open `about:debugging#/runtime/this-firefox`
-2. Click **Load Temporary Add-on…**
-3. Select `extension/manifest.json`
-
-Temporary add-ons are removed when Firefox restarts; reload the extension after each browser restart. The native host registration persists.
-
-### 3. Confirm ffmpeg
-
-```bash
-ffmpeg -version
-```
-
-If that fails, install ffmpeg and ensure it is on your `PATH`.
+Keep extension id `streamcatch@local` aligned with the native host if you change it.
 
 ## Usage
 
-1. Browse a page that plays Cloudflare Stream / HLS media
-2. Open the **StreamCatch** toolbar button to see captured links
-3. Use **Download…** for one file, or **Download all…** for the whole list
-4. Default save folder: `Downloads/StreamCatch` under your home directory (editable per download)
+1. Browse a page with Cloudflare Stream / HLS media
+2. Open the StreamCatch toolbar button
+3. Use **Download…** or **Download all…**
+
+Default save folder: `Downloads/StreamCatch` in your home directory.
 
 ### Filename templates (Download all)
 
-| Template | Example outputs |
+| Template | Example |
 |---|---|
-| `{###}-720` | `001-720.mp4`, `002-720.mp4` |
-| `{a}-720` | `a-720.mp4`, `b-720.mp4` |
-| `test-{n:2}-720` | `test-01-720.mp4`, `test-02-720.mp4` |
+| `{###}` | `001.mp4`, `002.mp4` |
 | `video_{n:3}` | `video_001.mp4`, `video_002.mp4` |
+| `{a}_clip` | `a_clip.mp4`, `b_clip.mp4` |
+| `test-{n:2}` | `test-01.mp4`, `test-02.mp4` |
 
-Tokens: `{n}`, `{n:3}` / `{###}` / `###` for numbers; `{a}` / `{A}` for letters.
+Tokens: `{n}`, `{n:3}` / `{###}`, `{a}` / `{A}`.
 
 ### CLI
 
 ```bash
-python3 main.py
+python3 StreamCatch.py
 ```
-
-Paste a Cloudflare Stream URL containing `thumbnails/thumbnail.jpg` or `manifest/video.m3u8`, then choose an output name.
 
 ## Troubleshooting
 
-**`No such native application com.streamcatch.host`**
+**`No such native application com.streamcatch.host`**  
+Re-run the native host installer, fully restart Firefox, and prefer a non-Snap Firefox build on Linux.
 
-- Re-run the native host installer
-- Fully quit and restart Firefox
-- On Ubuntu Snap Firefox, the host is installed under `~/snap/firefox/common/.mozilla/native-messaging-hosts/`
-- If Snap still blocks native messaging, use Mozilla’s `.deb` / official Firefox build
+**Missing or wrong titles**  
+Clear the list, then capture each video while it is the active selection in the page UI.
 
-**Titles look wrong or missing**
+## Acknowledgments
 
-- Clear the StreamCatch list, then play each clip while it is the active lesson in the page UI
-- Titles are taken from the page’s active lesson label at capture time
-
-**Python 2 vs Python 3**
-
-- Installers prefer `py -3` / `python3` and ignore a `python` alias that points at Python 2
-
-## Development
-
-1. Edit files under `extension/` and/or `native-host/`
-2. Reload the temporary add-on in `about:debugging`
-3. Re-run `native-host/install_host.py` after host script changes
-4. Use **Copy debug** in the popup when investigating capture/label issues
-
-Extension id (fixed for native messaging): `streamcatch@local`  
-Native host name: `com.streamcatch.host`
-
-## Publishing to GitHub
-
-This repository is prepared for GitHub under [@rcarioto](https://github.com/rcarioto).
-
-```bash
-# if the remote is not set yet:
-gh repo create streamcatch --public --source=. --remote=origin --push
-```
-
-Or create the empty repo on GitHub, then:
-
-```bash
-git remote add origin https://github.com/rcarioto/streamcatch.git
-git push -u origin main
-```
+The CLI is based on [cloudflare-stream-downloader](https://github.com/LovelyO0Sam/cloudflare-stream-downloader) by [LovelyO0Sam](https://github.com/LovelyO0Sam) (MIT). See [NOTICE](NOTICE).
 
 ## License
 
-This project is licensed under the **GNU General Public License v3.0**. See [LICENSE](LICENSE) for the full text.
-
-```text
-Copyright (C) 2026 Ray Carioto
-```
-
-You may redistribute and modify this software under the terms of the GPL-3.0. There is no warranty.
+Copyright (C) 2026 Ray Carioto. Licensed under the GNU GPL v3.0; see [LICENSE](LICENSE). Third-party MIT notices are in [NOTICE](NOTICE).

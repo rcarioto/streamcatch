@@ -301,8 +301,8 @@ async function addLink(url, context = {}) {
 
   await saveLinks(dedupeLinks(links).slice(0, MAX_LINKS));
 
-  // Label newly seen streams with the active lesson title shortly after capture,
-  // so the page has time to update the iframe/TOC title first.
+  // Label newly seen streams with the page's active title shortly after capture,
+  // so the UI has time to update the player/selection title first.
   if (isNew && typeof tabId === "number" && tabId >= 0) {
     setTimeout(() => {
       applyActiveTitleToIdentity(identity, tabId).catch(() => {});
@@ -329,7 +329,7 @@ function openDownloadDialog(url) {
     url: `download.html?${params.toString()}`,
     type: "popup",
     width: 480,
-    height: 420,
+    height: 480,
   });
 }
 
@@ -338,7 +338,7 @@ function openBulkDownloadDialog() {
     url: "bulk-download.html",
     type: "popup",
     width: 540,
-    height: 640,
+    height: 700,
   });
 }
 
@@ -423,6 +423,21 @@ browser.runtime.onMessage.addListener((message, sender) => {
 
   if (message.type === "getLinks") {
     return getLinks().then((links) => ({ ok: true, links }));
+  }
+
+  if (message.type === "getLinkInfo") {
+    return getLinks().then((links) => {
+      const identity = streamIdentity(message.url || "");
+      const match = links.find(
+        (item) => (item.identity || streamIdentity(item.url)) === identity
+      );
+      return {
+        ok: true,
+        label: (match && match.label) || "",
+        pageTitle: (match && match.pageTitle) || "",
+        videoId: (match && (match.videoId || extractCloudflareVideoId(match.url))) || "",
+      };
+    });
   }
 
   if (message.type === "streamLabels") {

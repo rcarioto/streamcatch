@@ -1,0 +1,9 @@
+{
+  "name": "com.streamcatch.host",
+  "description": "StreamCatch native messaging host",
+  "path": "/home/user1/cloudfare-stream-downloader/native-host/streamcatch_host",
+  "type": "stdio",
+  "allowed_extensions": [
+    "streamcatch@local"
+  ]
+}

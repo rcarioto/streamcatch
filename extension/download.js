@@ -5,11 +5,15 @@ const form = document.getElementById("downloadForm");
 const sourceUrlEl = document.getElementById("sourceUrl");
 const downloadDirEl = document.getElementById("downloadDir");
 const filenameEl = document.getElementById("filename");
+const useTitleEl = document.getElementById("useTitle");
+const titleExampleEl = document.getElementById("titleExample");
 const statusEl = document.getElementById("status");
 const submitBtn = document.getElementById("submitBtn");
 const cancelBtn = document.getElementById("cancelBtn");
 
 const FALLBACK_DIR = "Downloads/StreamCatch";
+let videoTitle = "";
+let manualFilename = "";
 
 sourceUrlEl.value = sourceUrl;
 
@@ -18,15 +22,69 @@ function setStatus(message, isError = false) {
   statusEl.classList.toggle("error", isError);
 }
 
+function sanitizeTitleFilename(title) {
+  let cleaned = String(title || "")
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[. ]+$/g, "");
+
+  // Soften common separators that are awkward in filenames.
+  cleaned = cleaned.replace(/\s*:\s*/g, " - ");
+  cleaned = cleaned.replace(/\s+/g, " ").trim();
+
+  if (!cleaned) {
+    return "";
+  }
+  return cleaned;
+}
+
 function normalizeFilename(name) {
   let cleaned = (name || "").trim();
   if (!cleaned) {
     cleaned = "downloaded_video";
   }
+  // Keep basename only.
+  cleaned = cleaned.split(/[/\\]/).pop();
   if (!cleaned.toLowerCase().endsWith(".mp4")) {
     cleaned += ".mp4";
   }
   return cleaned;
+}
+
+function titleFilenameExample() {
+  const stem = sanitizeTitleFilename(videoTitle);
+  if (!stem) {
+    return "";
+  }
+  return `${stem}.mp4`;
+}
+
+function applyTitleMode() {
+  const example = titleFilenameExample();
+  if (!example) {
+    useTitleEl.checked = false;
+    useTitleEl.disabled = true;
+    titleExampleEl.textContent = "Example: (no title available for this video)";
+    filenameEl.disabled = false;
+    return;
+  }
+
+  useTitleEl.disabled = false;
+  titleExampleEl.textContent = `Example: ${example}`;
+
+  if (useTitleEl.checked) {
+    if (!filenameEl.disabled) {
+      manualFilename = filenameEl.value;
+    }
+    filenameEl.value = sanitizeTitleFilename(videoTitle);
+    filenameEl.disabled = true;
+  } else {
+    filenameEl.disabled = false;
+    if (manualFilename) {
+      filenameEl.value = manualFilename;
+    }
+  }
 }
 
 async function native(payload) {
@@ -68,6 +126,35 @@ async function loadDownloadDir() {
   }
 }
 
+async function loadVideoTitle() {
+  if (!sourceUrl) {
+    applyTitleMode();
+    return;
+  }
+
+  try {
+    const info = await browser.runtime.sendMessage({
+      type: "getLinkInfo",
+      url: sourceUrl,
+    });
+    videoTitle = (info && info.label) || "";
+  } catch (error) {
+    videoTitle = "";
+  }
+
+  applyTitleMode();
+}
+
+useTitleEl.addEventListener("change", () => {
+  applyTitleMode();
+});
+
+filenameEl.addEventListener("input", () => {
+  if (!useTitleEl.checked) {
+    manualFilename = filenameEl.value;
+  }
+});
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -77,8 +164,18 @@ form.addEventListener("submit", async (event) => {
   }
 
   const downloadDir = (downloadDirEl.value || "").trim() || FALLBACK_DIR;
-  const filename = normalizeFilename(filenameEl.value);
-  filenameEl.value = filename.replace(/\.mp4$/i, "");
+  let filename;
+  if (useTitleEl.checked) {
+    const fromTitle = sanitizeTitleFilename(videoTitle);
+    if (!fromTitle) {
+      setStatus("No video title is available to use as the filename.", true);
+      return;
+    }
+    filename = normalizeFilename(fromTitle);
+  } else {
+    filename = normalizeFilename(filenameEl.value);
+    filenameEl.value = filename.replace(/\.mp4$/i, "");
+  }
 
   submitBtn.disabled = true;
   setStatus("Checking native host…");
@@ -109,7 +206,9 @@ form.addEventListener("submit", async (event) => {
       );
       if (!overwrite) {
         setStatus("Choose a different filename.");
-        filenameEl.focus();
+        if (!useTitleEl.checked) {
+          filenameEl.focus();
+        }
         submitBtn.disabled = false;
         return;
       }
@@ -142,4 +241,9 @@ form.addEventListener("submit", async (event) => {
 });
 
 cancelBtn.addEventListener("click", () => window.close());
-loadDownloadDir().then(() => filenameEl.focus());
+
+Promise.all([loadDownloadDir(), loadVideoTitle()]).then(() => {
+  if (!useTitleEl.checked) {
+    filenameEl.focus();
+  }
+});
